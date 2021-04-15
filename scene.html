@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<script id="x-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec2 vTexCoord;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition2;
+
+uniform vec4 lightPosition;
+
+varying vec2 fTexCoord;
+varying vec3 N, L, L2, E;
+
+void main()
+{
+
+}
+</script>
+<script id="x-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform sampler2D texture;
+
+varying vec3 N, L, L2, E;
+varying vec2 fTexCoord;
+
+void main()
+{
+
+}
+</script>
+
+<script id="o-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec2 vTexCoord;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition2;
+
+uniform vec4 lightPosition;
+
+varying vec2 fTexCoord;
+varying vec3 N, L, L2, E;
+
+void main()
+{
+
+}
+</script>
+<script id="o-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform sampler2D texture;
+
+varying vec3 N, L, L2, E;
+varying vec2 fTexCoord;
+
+void main()
+{
+
+}
+</script>
+
+<script id="grid-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec2 vTexCoord;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition2;
+
+uniform vec4 lightPosition;
+
+varying vec2 fTexCoord;
+varying vec3 N, L, L2, E;
+
+void main()
+{
+
+}
+</script>
+<script id="grid-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform sampler2D texture;
+
+varying vec3 N, L, L2, E;
+varying vec2 fTexCoord;
+
+void main()
+{
+
+}
+</script>
+
+<script id="plane-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec2 vTexCoord;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition2;
+
+uniform vec4 lightPosition;
+
+varying vec2 fTexCoord;
+varying vec3 N, L, L2, E;
+
+void main()
+{
+
+}
+</script>
+<script id="plane-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform sampler2D texture;
+
+varying vec3 N, L, L2, E;
+varying vec2 fTexCoord;
+
+void main()
+{
+
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="objLoader.js"></script>
+<script type="text/javascript" src="scene.js"></script>
+
+<body>
+
+<canvas id="gl-canvas" width="512"" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<img id = "texImage1" src = "wood.png" hidden></img>
+<img id = "texImage2" src = "world.png" hidden></img>
+<img id = "texImage3" src = "ball.png" hidden></img>
+<img id = "texImage4" src = "donut.png" hidden></img>
+<br/>
+
+</body>
+</html>
