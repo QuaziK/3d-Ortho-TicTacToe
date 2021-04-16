@@ -254,7 +254,6 @@ function timeToZ(time_factor){
     return zet;
 }
 
-//TODO-(currently temporary values)
 //takes a list of x and y coordiantes of mouse clicks and determines which slot should a piece would go
 //calls checkGameState after piece was placed
 //alternates which piece is to be placed
@@ -267,54 +266,46 @@ function registerClick(xcoord, ycoord){
     if (!gameWon){
         var piece;
         if (useXPiece) { piece="x"; } else { piece="o" }
-        if (xcoord < -.33 && xcoord > -1 && ycoord > .33 && ycoord < 1){ //(0,0)
-            if (gameState[matrixToLinear(0,0)][0] == "e" ) {
-                gameState[matrixToLinear(0,0)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > .33 && ycoord < 1){ //(1,0)
-            if (gameState[matrixToLinear(1,0)][0] == "e" ) {
-                gameState[matrixToLinear(1,0)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > .33 && ycoord < 1){ //(2,0)
-            if (gameState[matrixToLinear(2,0)][0] == "e" ) {
-                gameState[matrixToLinear(2,0)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < -.33 && xcoord > -1 && ycoord > -.33 && ycoord < .33){ //(0,1)
-            if (gameState[matrixToLinear(0,1)][0] == "e" ) {
-                gameState[matrixToLinear(0,1)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > -.33 && ycoord < .33){ //(1,1)
-            if (gameState[matrixToLinear(1,1)][0] == "e" ) {
-                gameState[matrixToLinear(1,1)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > -.33 && ycoord < .33){ //(2,1)
-            if (gameState[matrixToLinear(2,1)][0] == "e" ) {
-                gameState[matrixToLinear(2,1)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < -.33 && xcoord > -1 && ycoord > -1 && ycoord < -.33){ //(0,2)
-            if (gameState[matrixToLinear(0,2)][0] == "e" ) {
-                gameState[matrixToLinear(0,2)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > -1 && ycoord < -.33){ //(1,2)
-            if (gameState[matrixToLinear(1,2)][0] == "e" ) {
-                gameState[matrixToLinear(1,2)] = [piece, .55, .55, 2.0];
-            }
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > -1 && ycoord < -.33){ //(2,2)
-            if (gameState[matrixToLinear(2,2)][0] == "e" ) {
-                gameState[matrixToLinear(2,2)] = [piece, .55, .55, 2.0];
-            }
+        var gridxy = clickToGridCoor(xcoord, ycoord);
+        if (gameState[matrixToLinear(gridxy[0],gridxy[1])][0] == "e" ) {
+            gameState[matrixToLinear(gridxy[0],gridxy[1])] = [piece, gridxy[2],gridxy[3], 2.0];
         }        
         console.log(gameState);
         useXPiece = !useXPiece;
     }
+}
+
+//function to convert mouse click coordinates to grid coordites
+//also returns the 3d space x,y coordinates on where to render the X/O object
+//[xgrid,ygrid,x3d,y3d]
+function clickToGridCoor(xcoord, ycoord){
+        if (xcoord < -.33 && xcoord > -1 && ycoord > .33 && ycoord < 1){ //(0,0)
+            return [0,0,.55,.55];
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > .33 && ycoord < 1){ //(1,0)
+            return [1,0,.55,.55];
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > .33 && ycoord < 1){ //(2,0)
+            return [2,0,.55,.55];
+        }
+        if (xcoord < -.33 && xcoord > -1 && ycoord > -.33 && ycoord < .33){ //(0,1)
+            return [0,1,.55,.55];
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > -.33 && ycoord < .33){ //(1,1)
+            return [1,1,.55,.55];
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > -.33 && ycoord < .33){ //(2,1)
+            return [2,1,.55,.55];
+        }
+        if (xcoord < -.33 && xcoord > -1 && ycoord > -1 && ycoord < -.33){ //(0,2)
+            return [0,2,.55,.55];
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > -1 && ycoord < -.33){ //(1,2)
+            return [1,2,.55,.55];
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > -1 && ycoord < -.33){ //(2,2)
+            return [2,2,.55,.55];
+        } 
 }
 
 //checks all possible winning combinations to see if one occured
