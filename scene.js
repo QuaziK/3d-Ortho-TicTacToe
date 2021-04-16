@@ -48,7 +48,7 @@ var specularProduct = mult(lightSpecular, materialSpecular);
 
 var aspect;
 
-const TIME_VAL = .2;
+const TIME_VAL = .05;
 const G = 9.8 // gravity factor
 // ["name", x coord, y coord, time factor]
 // time factors need to be processed by the timeToZ() before sending to render
@@ -187,13 +187,13 @@ window.onload = function init()
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
 	aspect =  canvas.width/canvas.height;
-    gl.clearColor( 0.0, 1.0, 1.0, 1.0);
+    gl.clearColor( 0.0, 1.0, 0.5, 1.0);
 	
 	loadOBJFromPath("eks.obj", loadedX, readO);
     
     canvas.addEventListener("mousedown", function(event){
         var clickCoord = [(2*event.clientX/canvas.width-1), (2*(canvas.height-event.clientY)/canvas.height-1)];
-        //console.log(clickCoord);
+        console.log(clickCoord);
         registerClick(clickCoord[0], clickCoord[1]);
     });    
 }
@@ -232,11 +232,13 @@ function setupPlaneBuffers(){
 }
 
 function renderX(x, y, z){
-
+    if (Number.isNaN(z)) { z=0; }
+    //console.log("Render X to ", x, y, z);
 }
 
 function renderO(x, y, z){
-
+    if (Number.isNaN(z)) { z=0; }    
+    //console.log("Render O to ", x, y, z);
 }
 
 function renderGrid(){
@@ -252,21 +254,108 @@ function timeToZ(time_factor){
     return zet;
 }
 
-//TODO
+//TODO-(currently temporary values)
 //takes a list of x and y coordiantes of mouse clicks and determines which slot should a piece would go
 //calls checkGameState after piece was placed
 //alternates which piece is to be placed
 //does nothing if gameWon = true
+//the canvas coordiantes are as such
+//(-1,1) ___ (1,1)
+//      |   |
+//(-1,0)|___|(1,0)
 function registerClick(xcoord, ycoord){
     if (!gameWon){
-        
+        var piece;
+        if (useXPiece) { piece="x"; } else { piece="o" }
+        if (xcoord < -.33 && xcoord > -1 && ycoord > .33 && ycoord < 1){ //(0,0)
+            if (gameState[matrixToLinear(0,0)][0] == "e" ) {
+                gameState[matrixToLinear(0,0)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > .33 && ycoord < 1){ //(1,0)
+            if (gameState[matrixToLinear(1,0)][0] == "e" ) {
+                gameState[matrixToLinear(1,0)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > .33 && ycoord < 1){ //(2,0)
+            if (gameState[matrixToLinear(2,0)][0] == "e" ) {
+                gameState[matrixToLinear(2,0)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < -.33 && xcoord > -1 && ycoord > -.33 && ycoord < .33){ //(0,1)
+            if (gameState[matrixToLinear(0,1)][0] == "e" ) {
+                gameState[matrixToLinear(0,1)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > -.33 && ycoord < .33){ //(1,1)
+            if (gameState[matrixToLinear(1,1)][0] == "e" ) {
+                gameState[matrixToLinear(1,1)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > -.33 && ycoord < .33){ //(2,1)
+            if (gameState[matrixToLinear(2,1)][0] == "e" ) {
+                gameState[matrixToLinear(2,1)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < -.33 && xcoord > -1 && ycoord > -1 && ycoord < -.33){ //(0,2)
+            if (gameState[matrixToLinear(0,2)][0] == "e" ) {
+                gameState[matrixToLinear(0,2)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < .33 && xcoord > -.33 && ycoord > -1 && ycoord < -.33){ //(1,2)
+            if (gameState[matrixToLinear(1,2)][0] == "e" ) {
+                gameState[matrixToLinear(1,2)] = [piece, .55, .55, 2.0];
+            }
+        }
+        if (xcoord < 1 && xcoord > .33 && ycoord > -1 && ycoord < -.33){ //(2,2)
+            if (gameState[matrixToLinear(2,2)][0] == "e" ) {
+                gameState[matrixToLinear(2,2)] = [piece, .55, .55, 2.0];
+            }
+        }        
+        console.log(gameState);
+        useXPiece = !useXPiece;
     }
 }
 
-//TODO 
 //checks all possible winning combinations to see if one occured
+//if win is detected set gameWon = true
+//if not do nothing
 function checkGameState(){
-    
+    for (var sic = 0; sic < 2; sic++){
+        var piece;
+        if (sic == 0) { piece="x"; } else { piece="o"; }
+        if (gameState[0][0] == piece &&
+            gameState[1][0] == piece &&
+            gameState[2][0] == piece) {gameWon = true;} // top row
+            
+        if (gameState[3][0] == piece &&
+            gameState[4][0] == piece &&
+            gameState[5][0] == piece) {gameWon = true;} // mid row
+            
+        if (gameState[6][0] == piece &&
+            gameState[7][0] == piece &&
+            gameState[8][0] == piece) {gameWon = true;} // bot row
+            
+        if (gameState[0][0] == piece &&
+            gameState[3][0] == piece &&
+            gameState[6][0] == piece) {gameWon = true;} // left col
+            
+        if (gameState[1][0] == piece &&
+            gameState[4][0] == piece &&
+            gameState[7][0] == piece) {gameWon = true;} // mid col
+            
+        if (gameState[2][0] == piece &&
+            gameState[5][0] == piece &&
+            gameState[8][0] == piece) {gameWon = true;} // right col
+            
+        if (gameState[0][0] == piece &&
+            gameState[4][0] == piece &&
+            gameState[8][0] == piece) {gameWon = true;} // tl->br diag 
+            
+        if (gameState[6][0] == piece &&
+            gameState[4][0] == piece &&
+            gameState[2][0] == piece) {gameWon = true;} // bl->tr diag           
+    }
 }
 
 //because the gameState is a 1d list, when speaking in x and y coordinates it is necessary to convert them to a 1d scale
@@ -277,6 +366,23 @@ function checkGameState(){
 // 6 | 7 | 8      (0,2) | (1,2) | (2,2)
 function matrixToLinear(x, y){
     return x+(y*3);
+}
+
+//checks each slot in gameState to see if all pieces have finished falling
+//resets the board if so
+//is only called when gameWon = true
+function allSettled() {
+    var goReset = true;
+    for (var ii = 0; ii<gameState.length; ii++){
+        if (gameState[ii][3] > 0) { goReset=false; }
+    }
+    if (goReset) {
+        gameWon = false;
+        useXPiece = true;
+        gameState = [["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
+                     ["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
+                     ["e",0,0,0], ["e",0,0,0], ["e",0,0,0]];
+    }
 }
 
 var modelViewMatrix, projectionMatrix;
@@ -295,16 +401,18 @@ function render()
     for (var i = 0; i < gameState.length; i++){
         if (gameState[i][0] == "x"){
             renderX(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
-            if (gameState[i][3] != 0) {
+            if (gameState[i][3] > 0) {
                 gameState[i][3] = gameState[i][3] - TIME_VAL;
             }
         }
         if (gameState[i][0] == "o"){
-            renderX(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
-            if (gameState[i][3] != 0) {
+            renderO(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
+            if (gameState[i][3] > 0) {
                 gameState[i][3] = gameState[i][3] - TIME_VAL;
             }
         }
+        checkGameState();
+        if (gameWon){allSettled();}
     }
  
     requestAnimFrame( render );
