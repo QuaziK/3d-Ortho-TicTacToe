@@ -52,7 +52,7 @@ const TIME_VAL = .2;
 const G = 9.8 // gravity factor
 // ["name", x coord, y coord, time factor]
 // time factors need to be processed by the timeToZ() before sending to render
-// every time x/o gets rendered their time factor gets reduced by TIME_VAL
+// every time x/o gets rendered their time factor gets reduced by TIME_VAL until 0
 var gameState = [["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
                  ["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
                  ["e",0,0,0], ["e",0,0,0], ["e",0,0,0]];
@@ -93,7 +93,7 @@ function loadedGrid(data, _callback)
 	grid_vertices = grid_object.c_verts;
 	numVerticesInAllGridFaces = grid_indices.length;
 	grid_normals = getOrderedNormalsFromObj(grid_object);
-	grid_texture_coords = getOrderedTegridtureCoordsFromObj(grid_object);
+	grid_texture_coords = getOrderedTextureCoordsFromObj(grid_object);
 	_callback();
 }
 
@@ -105,7 +105,7 @@ function loadedPlane(data, _callback)
 	plane_vertices = plane_object.c_verts;
 	numVerticesInAllPlaneFaces = plane_indices.length;
 	plane_normals = getOrderedNormalsFromObj(plane_object);
-	plane_texture_coords = getOrderedTeplanetureCoordsFromObj(plane_object);
+	plane_texture_coords = getOrderedTextureCoordsFromObj(plane_object);
 	_callback();
 }
 
@@ -187,12 +187,13 @@ window.onload = function init()
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
 	aspect =  canvas.width/canvas.height;
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0);
+    gl.clearColor( 0.0, 1.0, 1.0, 1.0);
 	
 	loadOBJFromPath("eks.obj", loadedX, readO);
     
     canvas.addEventListener("mousedown", function(event){
         var clickCoord = [(2*event.clientX/canvas.width-1), (2*(canvas.height-event.clientY)/canvas.height-1)];
+        //console.log(clickCoord);
         registerClick(clickCoord[0], clickCoord[1]);
     });    
 }
@@ -206,7 +207,7 @@ var nBufferX, nBufferO, nBufferGrid, nBufferPlane;
 var tBufferX, tBufferO, tBufferGrid, tBufferPlane;
 
 var vTexCoordX, vTexCoordO, vTexCoordGrid, vTexCoordPlane;
-var vNormalX, vNormalO, vTexCoordGrid, vTexCoordPlane;
+var vNormalX, vNormalO, vNormalGrid, vNormalPlane;
 
 var projectionMatrixLocX, modelViewMatrixLocX;
 var projectionMatrixLocO, modelViewMatrixLocO;
@@ -263,8 +264,8 @@ function registerClick(xcoord, ycoord){
 }
 
 //TODO 
-//looks at the passed coordiante and checks surrounding slots if it made a 3 in a row with them
-function checkGameState(grid_x, grid_y){
+//checks all possible winning combinations to see if one occured
+function checkGameState(){
     
 }
 
