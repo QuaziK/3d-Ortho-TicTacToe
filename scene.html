@@ -1,81 +1,37 @@
 <!DOCTYPE html>
 <html>
 
-<script id="x-vertex-shader" type="x-shader/x-vertex">
+<script id="xo-vertex-shader" type="x-shader/x-vertex">
 
-attribute vec4 vPosition;
 attribute vec2 vTexCoord;
-attribute vec3 vNormal;
+attribute vec4 vNormal;
+attribute vec4 vPosition;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform vec4 lightPosition2;
-
-uniform vec4 lightPosition;
 
 varying vec2 fTexCoord;
-varying vec3 N, L, L2, E;
 
 void main()
-{
-
+{   
+    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+	
+    // Texture coordinates
+    fTexCoord = vTexCoord;
 }
 </script>
-<script id="x-fragment-shader" type="x-shader/x-fragment">
+<script id="xo-fragment-shader" type="xo-shader/x-fragment">
 
 precision mediump float;
 
-uniform vec4 ambientProduct;
-uniform vec4 diffuseProduct;
-uniform vec4 specularProduct;
-uniform float shininess;
 uniform sampler2D texture;
 
-varying vec3 N, L, L2, E;
 varying vec2 fTexCoord;
 
 void main()
 {
-
-}
-</script>
-
-<script id="o-vertex-shader" type="x-shader/x-vertex">
-
-attribute vec4 vPosition;
-attribute vec2 vTexCoord;
-attribute vec3 vNormal;
-
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-uniform vec4 lightPosition2;
-
-uniform vec4 lightPosition;
-
-varying vec2 fTexCoord;
-varying vec3 N, L, L2, E;
-
-void main()
-{
-
-}
-</script>
-<script id="o-fragment-shader" type="x-shader/x-fragment">
-
-precision mediump float;
-
-uniform vec4 ambientProduct;
-uniform vec4 diffuseProduct;
-uniform vec4 specularProduct;
-uniform float shininess;
-uniform sampler2D texture;
-
-varying vec3 N, L, L2, E;
-varying vec2 fTexCoord;
-
-void main()
-{
-
+    // TODO light source, bump map, diffuse coefficient, ..
+    gl_FragColor = texture2D(texture, fTexCoord);
 }
 </script>
 
@@ -165,14 +121,14 @@ void main()
 
 <body>
 
-<canvas id="gl-canvas" width="512"" height="512">
+<canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
 
-<img id = "texImage1" src = "wood.png" hidden></img>
-<img id = "texImage2" src = "world.png" hidden></img>
-<img id = "texImage3" src = "ball.png" hidden></img>
-<img id = "texImage4" src = "donut.png" hidden></img>
+<img id = "woodImage" src = "wood.png" hidden></img>
+<img id = "worldImage" src = "world.png" hidden></img>
+<img id = "ballImage" src = "ball.png" hidden></img>
+<img id = "donutImage" src = "donut.png" hidden></img>
 <br/>
 
 </body>

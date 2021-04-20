@@ -46,7 +46,10 @@ var ambientProduct = mult(lightAmbient, materialAmbient);
 var diffuseProduct = mult(lightDiffuse, materialDiffuse);
 var specularProduct = mult(lightSpecular, materialSpecular);
 
-var aspect;
+var near = 0.3;    // Near clipping plane
+var far = 30.0;   // Far clipping plane
+var fovy = 120.0;  // Field-of-view in Y direction angle (in degrees)
+var aspect = 1.0;  // Viewport aspect ratio
 
 const TIME_VAL = .05;
 const G = 9.8 // gravity factor
@@ -166,13 +169,13 @@ function setupAfterDataLoad(){
     setupGridBuffers();
     setupPlaneBuffers();
 	
-	var image1 = document.getElementById("texImage1");
+	var image1 = document.getElementById("woodImage");
 	textureX = configureTexture( image1 );
-	var image2 = document.getElementById("texImage2");
+	var image2 = document.getElementById("worldImage");
     textureO = configureTexture( image2 );
-	var image3 = document.getElementById("texImage3");
+	var image3 = document.getElementById("ballImage");
     textureGrid = configureTexture( image3 );
-	var image4 = document.getElementById("texImage4");
+	var image4 = document.getElementById("donutImage");
     texturePlane = configureTexture( image4 );    
     
     render();	
@@ -199,7 +202,7 @@ window.onload = function init()
 }
 
 var x_shader, o_shader, grid_shader, plane_shader;
-var vBufferX, vBufferX, vBufferGrid, vBufferPlane; 
+var vBufferX, vBufferO, vBufferGrid, vBufferPlane; 
 var vPositionX, vPositionO, vPositionGrid, vPositionPlane;
 
 var iBufferX, iBufferO, iBufferGrid, iBufferPlane;
@@ -216,11 +219,81 @@ var projectionMatrixLocPlane, modelViewMatrixLocPlane;
 
 //TODO setup+render functions
 function setupXBuffers(){
+    //  Load shaders and initialize attribute buffers
+    x_shader = initShaders( gl, "xo-vertex-shader", "xo-fragment-shader" );
+    gl.useProgram( x_shader );
 
+    // array element buffer
+    iBufferX = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferX);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(x_indices), gl.STATIC_DRAW);
+	
+    // vertex array attribute buffer
+    vBufferX = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBufferX );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(x_vertices), gl.STATIC_DRAW );
+
+    vPositionX = gl.getAttribLocation( x_shader, "vPosition" );
+    //console.log(vPositionX);
+
+	// normal array attribute buffer
+	nBufferX = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferX );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(x_normals), gl.STATIC_DRAW );
+
+	vNormalX = gl.getAttribLocation( x_shader, "vNormal" );
+    console.log(vNormalX);
+
+	// texture array attribute buffer
+	tBufferX = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBufferX );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(x_texture_coords), gl.STATIC_DRAW );
+    
+    vTexCoordX = gl.getAttribLocation( x_shader, "vTexCoord" );
+    //console.log(vTexCoordX);
+
+	// Model view projection uniforms
+	modelViewMatrixLocX = gl.getUniformLocation( x_shader, "modelViewMatrix" );
+    projectionMatrixLocX = gl.getUniformLocation( x_shader, "projectionMatrix" );
 }
 
 function setupOBuffers(){
+    //  Load shaders and initialize attribute buffers
+    o_shader = initShaders( gl, "xo-vertex-shader", "xo-fragment-shader" );
+    gl.useProgram( o_shader );
 
+    // array element buffer
+    iBufferO = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferO);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(o_indices), gl.STATIC_DRAW);
+	
+    // vertex array attribute buffer
+    vBufferO = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBufferO );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(o_vertices), gl.STATIC_DRAW );
+
+    vPositionO = gl.getAttribLocation( o_shader, "vPosition" );
+    //console.log(vPositionO);
+
+	// normal array attribute buffer
+	nBufferO = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferO );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(o_normals), gl.STATIC_DRAW );
+
+	vNormalX = gl.getAttribLocation( o_shader, "vNormal" );
+    console.log(vNormalX);
+
+	// texture array attribute buffer
+	tBufferO = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBufferO );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(o_texture_coords), gl.STATIC_DRAW );
+    
+    vTexCoordO = gl.getAttribLocation( o_shader, "vTexCoord" );
+    //console.log(vTexCoordO);
+
+	// Model view projection uniforms
+	modelViewMatrixLocO = gl.getUniformLocation( o_shader, "modelViewMatrix" );
+    projectionMatrixLocO = gl.getUniformLocation( o_shader, "projectionMatrix" );
 }
 
 function setupGridBuffers(){
@@ -234,11 +307,75 @@ function setupPlaneBuffers(){
 function renderX(x, y, z){
     if (Number.isNaN(z)) { z=0; }
     //console.log("Render X to ", x, y, z);
+
+    // Use x shader program
+    gl.useProgram( x_shader );
+	
+    // Indicies
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferX);
+	
+	// Vertices
+	gl.bindBuffer( gl.ARRAY_BUFFER, vBufferX );
+    gl.vertexAttribPointer( vPositionX, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPositionX );
+
+	// Normals
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferX );
+    gl.vertexAttribPointer( vNormalX, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormalX );
+
+	// Texture
+	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferX );
+	gl.vertexAttribPointer( vTexCoordX, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTexCoordX );
+
+    // Bind texture
+	gl.bindTexture( gl.TEXTURE_2D, textureX );
+	
+    // Model View Projection
+    var modelViewMatrixX = mult(modelViewMatrix, translate(x, y, z));
+	gl.uniformMatrix4fv( modelViewMatrixLocX, false, flatten(modelViewMatrixX) );
+    gl.uniformMatrix4fv( projectionMatrixLocX, false, flatten(projectionMatrix) );
+
+	// console.log(numVerticesInAllXFaces);
+    gl.drawElements( gl.TRIANGLES, numVerticesInAllXFaces, gl.UNSIGNED_SHORT, 0 );
 }
 
 function renderO(x, y, z){
     if (Number.isNaN(z)) { z=0; }    
     //console.log("Render O to ", x, y, z);
+
+    // Use x shader program
+    gl.useProgram( o_shader );
+	
+    // Indicies
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferO);
+	
+	// Vertices
+	gl.bindBuffer( gl.ARRAY_BUFFER, vBufferO );
+    gl.vertexAttribPointer( vPositionO, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPositionO );
+
+	// Normals
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferO );
+    gl.vertexAttribPointer( vNormalO, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormalO );
+
+	// Texture
+	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferO );
+	gl.vertexAttribPointer( vTexCoordO, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTexCoordO );
+
+    // Bind texture
+	gl.bindTexture( gl.TEXTURE_2D, textureO );
+	
+    // Model View Projection
+    var modelViewMatrixO = mult(modelViewMatrix, translate(x, y, z));
+	gl.uniformMatrix4fv( modelViewMatrixLocO, false, flatten(modelViewMatrixO) );
+    gl.uniformMatrix4fv( projectionMatrixLocO, false, flatten(projectionMatrix) );
+
+	// console.log(numVerticesInAllYFaces);
+    gl.drawElements( gl.TRIANGLES, numVerticesInAllOFaces, gl.UNSIGNED_SHORT, 0 );
 }
 
 function renderGrid(){
@@ -387,8 +524,13 @@ function render()
 
 	modelViewMatrix = lookAt( eye, at, up );
 
-    projectionMatrix = perspective(120, aspect, 0.3, 30);
+    projectionMatrix = perspective(fovy, aspect, near, far);
  
+    renderX(0,0,0); //! temp
+    renderO(1,1,0); //! temp
+
+    //! @todo uncomment
+    /*
     for (var i = 0; i < gameState.length; i++){
         if (gameState[i][0] == "x"){
             renderX(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
@@ -405,6 +547,7 @@ function render()
         checkGameState();
         if (gameWon){allSettled();}
     }
+    */
  
     requestAnimFrame( render );
 }
