@@ -52,7 +52,10 @@ varying vec3 N, L, L2, E;
 
 void main()
 {
-
+    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+	
+    // Texture coordinates
+    fTexCoord = vTexCoord;
 }
 </script>
 <script id="grid-fragment-shader" type="x-shader/x-fragment">
@@ -70,7 +73,7 @@ varying vec2 fTexCoord;
 
 void main()
 {
-
+    gl_FragColor = texture2D(texture, fTexCoord);
 }
 </script>
 
@@ -91,7 +94,10 @@ varying vec3 N, L, L2, E;
 
 void main()
 {
-
+    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+	
+    // Texture coordinates
+    fTexCoord = vTexCoord;
 }
 </script>
 <script id="plane-fragment-shader" type="x-shader/x-fragment">
@@ -109,7 +115,7 @@ varying vec2 fTexCoord;
 
 void main()
 {
-
+    gl_FragColor = texture2D(texture, fTexCoord);
 }
 </script>
 

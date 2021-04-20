@@ -53,6 +53,8 @@ var aspect = 1.0;  // Viewport aspect ratio
 
 const TIME_VAL = .05;
 const G = 9.8 // gravity factor
+const Z_OFFSET = 1;
+const Z_MULT = -5; //multiplier for timeToZ() output
 // ["name", x coord, y coord, time factor]
 // time factors need to be processed by the timeToZ() before sending to render
 // every time x/o gets rendered their time factor gets reduced by TIME_VAL until 0
@@ -62,7 +64,9 @@ var gameState = [["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
 var gameWon = false; // if true prevents all incoming clicks to register pieces
 var useXPiece = true; // if true, registerClick() puts an x, if false puts an o
 
-const Z_MULT = 5; //multiplier for timeToZ() output
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 function loadedX(data, _callback)
 {
@@ -196,7 +200,7 @@ window.onload = function init()
     
     canvas.addEventListener("mousedown", function(event){
         var clickCoord = [(2*event.clientX/canvas.width-1), (2*(canvas.height-event.clientY)/canvas.height-1)];
-        //console.log(clickCoord);
+        console.log(clickCoord);
         registerClick(clickCoord[0], clickCoord[1]);
     });    
 }
@@ -217,7 +221,6 @@ var projectionMatrixLocO, modelViewMatrixLocO;
 var projectionMatrixLocGrid, modelViewMatrixLocGrid;
 var projectionMatrixLocPlane, modelViewMatrixLocPlane;
 
-//TODO setup+render functions
 function setupXBuffers(){
     //  Load shaders and initialize attribute buffers
     x_shader = initShaders( gl, "xo-vertex-shader", "xo-fragment-shader" );
@@ -242,7 +245,7 @@ function setupXBuffers(){
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(x_normals), gl.STATIC_DRAW );
 
 	vNormalX = gl.getAttribLocation( x_shader, "vNormal" );
-    console.log(vNormalX);
+    //console.log(vNormalX);
 
 	// texture array attribute buffer
 	tBufferX = gl.createBuffer();
@@ -281,7 +284,7 @@ function setupOBuffers(){
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(o_normals), gl.STATIC_DRAW );
 
 	vNormalX = gl.getAttribLocation( o_shader, "vNormal" );
-    console.log(vNormalX);
+    //console.log(vNormalO);
 
 	// texture array attribute buffer
 	tBufferO = gl.createBuffer();
@@ -297,15 +300,85 @@ function setupOBuffers(){
 }
 
 function setupGridBuffers(){
+    //  Load shaders and initialize attribute buffers
+    grid_shader = initShaders( gl, "grid-vertex-shader", "grid-fragment-shader" );
+    gl.useProgram( grid_shader );
 
+    // array element buffer
+    iBufferGrid = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferGrid);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(grid_indices), gl.STATIC_DRAW);
+	
+    // vertex array attribute buffer
+    vBufferGrid = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBufferGrid );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(grid_vertices), gl.STATIC_DRAW );
+
+    vPositionGrid = gl.getAttribLocation( grid_shader, "vPosition" );
+    //console.log(vPositionO);
+
+	// normal array attribute buffer
+	nBufferGrid = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferGrid );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(grid_normals), gl.STATIC_DRAW );
+
+	vNormalGrid = gl.getAttribLocation( grid_shader, "vNormal" );
+    //console.log(vNormalO);
+
+	// texture array attribute buffer
+	tBufferGrid = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBufferGrid );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(grid_texture_coords), gl.STATIC_DRAW );
+    
+    vTexCoordGrid = gl.getAttribLocation( grid_shader, "vTexCoord" );
+    //console.log(vTexCoordO);
+
+	// Model view projection uniforms
+	modelViewMatrixLocGrid = gl.getUniformLocation( grid_shader, "modelViewMatrix" );
+    projectionMatrixLocGrid = gl.getUniformLocation( grid_shader, "projectionMatrix" );
 }
 
 function setupPlaneBuffers(){
+    //  Load shaders and initialize attribute buffers
+    plane_shader = initShaders( gl, "plane-vertex-shader", "plane-fragment-shader" );
+    gl.useProgram( plane_shader );
 
+    // array element buffer
+    iBufferPlane = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferPlane);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(plane_indices), gl.STATIC_DRAW);
+	
+    // vertex array attribute buffer
+    vBufferPlane = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBufferPlane );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
+
+    vPositionPlane = gl.getAttribLocation( plane_shader, "vPosition" );
+    //console.log(vPositionO);
+
+	// normal array attribute buffer
+	nBufferPlane = gl.createBuffer();
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferPlane );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_normals), gl.STATIC_DRAW );
+
+	vNormalPlane = gl.getAttribLocation( plane_shader, "vNormal" );
+    //console.log(vNormalO);
+
+	// texture array attribute buffer
+	tBufferPlane = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(plane_texture_coords), gl.STATIC_DRAW );
+    
+    vTexCoordPlane = gl.getAttribLocation( plane_shader, "vTexCoord" );
+    //console.log(vTexCoordO);
+
+	// Model view projection uniforms
+	modelViewMatrixLocPlane = gl.getUniformLocation( plane_shader, "modelViewMatrix" );
+    projectionMatrixLocPlane = gl.getUniformLocation( plane_shader, "projectionMatrix" );
 }
 
 function renderX(x, y, z){
-    if (Number.isNaN(z)) { z=0; }
+    if (Number.isNaN(y)) { y=1; }
     //console.log("Render X to ", x, y, z);
 
     // Use x shader program
@@ -332,7 +405,7 @@ function renderX(x, y, z){
     // Bind texture
 	gl.bindTexture( gl.TEXTURE_2D, textureX );
 	
-    // Model View Projection
+    // Model View Projection    
     var modelViewMatrixX = mult(modelViewMatrix, translate(x, y, z));
 	gl.uniformMatrix4fv( modelViewMatrixLocX, false, flatten(modelViewMatrixX) );
     gl.uniformMatrix4fv( projectionMatrixLocX, false, flatten(projectionMatrix) );
@@ -342,7 +415,7 @@ function renderX(x, y, z){
 }
 
 function renderO(x, y, z){
-    if (Number.isNaN(z)) { z=0; }    
+    if (Number.isNaN(y)) { y=1; }    
     //console.log("Render O to ", x, y, z);
 
     // Use x shader program
@@ -371,6 +444,7 @@ function renderO(x, y, z){
 	
     // Model View Projection
     var modelViewMatrixO = mult(modelViewMatrix, translate(x, y, z));
+
 	gl.uniformMatrix4fv( modelViewMatrixLocO, false, flatten(modelViewMatrixO) );
     gl.uniformMatrix4fv( projectionMatrixLocO, false, flatten(projectionMatrix) );
 
@@ -379,15 +453,73 @@ function renderO(x, y, z){
 }
 
 function renderGrid(){
-    
+    // Use x shader program
+    gl.useProgram( grid_shader );
+	
+    // Indicies
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferGrid);
+	
+	// Vertices
+	gl.bindBuffer( gl.ARRAY_BUFFER, vBufferGrid );
+    gl.vertexAttribPointer( vPositionGrid, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPositionGrid );
+
+	// Normals
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferGrid );
+    gl.vertexAttribPointer( vNormalGrid, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormalGrid );
+
+	// Texture
+	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferGrid );
+	gl.vertexAttribPointer( vTexCoordGrid, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTexCoordGrid );
+
+    // Bind texture
+	gl.bindTexture( gl.TEXTURE_2D, texturePlane );
+	var modelViewMatrixGrid = mult(modelViewMatrix, translate(-2,1,-2));
+    modelViewMatrixGrid = mult(modelViewMatrixGrid, scalem(1.4,1,1.4));
+	gl.uniformMatrix4fv( modelViewMatrixLocGrid, false, flatten(modelViewMatrixGrid) );
+    gl.uniformMatrix4fv( projectionMatrixLocGrid, false, flatten(projectionMatrix) );
+
+	// console.log(numVerticesInAllYFaces);
+    gl.drawElements( gl.TRIANGLES, numVerticesInAllGridFaces, gl.UNSIGNED_SHORT, 0 );    
 }
 
 function renderPlane(){
-    
+    // Use plane shader program
+    gl.useProgram( plane_shader );
+	
+    // Indicies
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBufferPlane);
+	
+	// Vertices
+	gl.bindBuffer( gl.ARRAY_BUFFER, vBufferPlane );
+    gl.vertexAttribPointer( vPositionPlane, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPositionPlane );
+
+	// Normals
+	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferPlane );
+    gl.vertexAttribPointer( vNormalPlane, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormalPlane );
+
+	// Texture
+	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
+	gl.vertexAttribPointer( vTexCoordPlane, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTexCoordPlane );
+
+    // Bind texture
+	gl.bindTexture( gl.TEXTURE_2D, textureGrid );
+	var modelViewMatrixPlane = mult(modelViewMatrix, translate(-2,1.2,-2));
+    modelViewMatrixPlane = mult(modelViewMatrixPlane, scalem(1.4,1.4,1.4));
+	gl.uniformMatrix4fv( modelViewMatrixLocPlane, false, flatten(modelViewMatrixPlane) );
+    gl.uniformMatrix4fv( projectionMatrixLocPlane, false, flatten(projectionMatrix) );
+
+	// console.log(numVerticesInAllYFaces);
+    gl.drawElements( gl.TRIANGLES, numVerticesInAllPlaneFaces, gl.UNSIGNED_SHORT, 0 );     
 }
 
 function timeToZ(time_factor){
-    var zet = Z_MULT * Math.sqrt(time_factor / G);
+    var zet = Z_MULT * Math.sqrt(time_factor / G) + Z_OFFSET;
     return zet;
 }
 
@@ -402,11 +534,13 @@ function timeToZ(time_factor){
 function registerClick(xcoord, ycoord){
     if (!gameWon){
         var piece;
-        if (useXPiece) { piece="x"; } else { piece="o" }
         var gridxy = clickToGridCoor(xcoord, ycoord);
-        if (gameState[matrixToLinear(gridxy[0],gridxy[1])][0] == "e" ) {
-            gameState[matrixToLinear(gridxy[0],gridxy[1])] = [piece, gridxy[2],gridxy[3], 2.0];
-        }        
+        if (gridxy[0] < 100){
+            if (useXPiece) { piece="x"; } else { piece="o" }            
+            if (gameState[matrixToLinear(gridxy[0],gridxy[1])][0] == "e" ) {
+                gameState[matrixToLinear(gridxy[0],gridxy[1])] = [piece, gridxy[2],gridxy[3], 2.0];
+            }        
+        }
         console.log(gameState);
         useXPiece = !useXPiece;
     }
@@ -416,33 +550,35 @@ function registerClick(xcoord, ycoord){
 //also returns the 3d space x,y coordinates on where to render the X/O object
 //[xgrid,ygrid,x3d,y3d]
 function clickToGridCoor(xcoord, ycoord){
-        if (xcoord < -.33 && xcoord > -1 && ycoord > .33 && ycoord < 1){ //(0,0)
-            return [0,0,.55,.55];
+        if (xcoord < .13 && xcoord > -.07 && ycoord > .33 && ycoord < .53){ //(0,0)
+            return [0,0,-3,-3];
+        } else 
+        if (xcoord < .35 && xcoord > .15 && ycoord > .25 && ycoord < .45){ //(1,0)
+            return [1,0,-3,-2];
+        } else 
+        if (xcoord < .65 && xcoord > .45 && ycoord > .15 && ycoord < .35){ //(2,0)
+            return [2,0,-3,-1];
+        } else 
+        if (xcoord < -.15 && xcoord > -.35 && ycoord > .25 && ycoord < .45){ //(0,1)
+            return [0,1,-2,-3];
+        } else 
+        if (xcoord < .1 && xcoord > -.1 && ycoord > .2 && ycoord < .35){ //(1,1)
+            return [1,1,-2,-2];
+        } else
+        if (xcoord < .4 && xcoord > .2 && ycoord > .1 && ycoord < .2){ //(2,1)
+            return [2,1,-2,-1];
+        } else 
+        if (xcoord < -.4 && xcoord > -.6 && ycoord > .2 && ycoord < .4){ //(0,2)
+            return [0,2,-1,-3];
+        } else 
+        if (xcoord < -.21 && xcoord > -.44 && ycoord > 0 && ycoord < .2){ //(1,2)
+            return [1,2,-1,-2];
+        } else
+        if (xcoord < 0.145 && xcoord > -.10 && ycoord > -.2 && ycoord < .1){ //(2,2)
+            return [2,2,-1,-1];
+        } else {
+            return [99999,99999,99999,99999]; // click wasnt over any square
         }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > .33 && ycoord < 1){ //(1,0)
-            return [1,0,.55,.55];
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > .33 && ycoord < 1){ //(2,0)
-            return [2,0,.55,.55];
-        }
-        if (xcoord < -.33 && xcoord > -1 && ycoord > -.33 && ycoord < .33){ //(0,1)
-            return [0,1,.55,.55];
-        }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > -.33 && ycoord < .33){ //(1,1)
-            return [1,1,.55,.55];
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > -.33 && ycoord < .33){ //(2,1)
-            return [2,1,.55,.55];
-        }
-        if (xcoord < -.33 && xcoord > -1 && ycoord > -1 && ycoord < -.33){ //(0,2)
-            return [0,2,.55,.55];
-        }
-        if (xcoord < .33 && xcoord > -.33 && ycoord > -1 && ycoord < -.33){ //(1,2)
-            return [1,2,.55,.55];
-        }
-        if (xcoord < 1 && xcoord > .33 && ycoord > -1 && ycoord < -.33){ //(2,2)
-            return [2,2,.55,.55];
-        } 
 }
 
 //checks all possible winning combinations to see if one occured
@@ -504,13 +640,27 @@ function allSettled() {
     for (var ii = 0; ii<gameState.length; ii++){
         if (gameState[ii][3] > 0) { goReset=false; }
     }
-    if (goReset) {
-        gameWon = false;
-        useXPiece = true;
-        gameState = [["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
-                     ["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
-                     ["e",0,0,0], ["e",0,0,0], ["e",0,0,0]];
-    }
+    return goReset;
+
+}
+
+// checks if every square is occupied
+function boardFull() {
+    var isFull = true;
+    for (var ii = 0; ii<gameState.length; ii++){
+        if (gameState[ii][0] == "e") { isFull = false; }
+    }    
+    return isFull;
+}
+
+//resets major parts of the game
+function resetGame() {
+    gameWon = false;
+    useXPiece = true;
+    gameState = [["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
+                 ["e",0,0,0], ["e",0,0,0], ["e",0,0,0],
+                 ["e",0,0,0], ["e",0,0,0], ["e",0,0,0]];
+
 }
 
 var modelViewMatrix, projectionMatrix;
@@ -518,42 +668,47 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	var eye = vec3(.7, -.7, .7);   
+	var eye = vec3(1, -1, 1);   
 	var at = vec3(0.0, 0.0, 0.0);
 	var up = vec3(0.0, -1.0, 0.0);
 
 	modelViewMatrix = lookAt( eye, at, up );
 
     projectionMatrix = perspective(fovy, aspect, near, far);
- 
-    renderX(-1,1,-1); //! temp
-    renderO(-2,1,-1); //! temp
-    renderX(-3,1,-1); //! temp
-    renderO(-1,1,-2); //! temp    
-    renderX(-2,1,-2); //! temp        
-    renderO(-3,1,-2); //! temp   
-    renderX(-1,1,-3); //! temp    
-    renderO(-2,1,-3); //! temp        
-    renderX(-3,1,-3); //! temp       
-    //! @todo uncomment
-    /*
+
+    //renderX(-1,1,-1); //! temp
+    //renderO(-2,1,-1); //! temp
+    //renderX(-3,1,-1); //! temp
+    //renderO(-1,1,-2); //! temp    
+    //renderX(-2,1,-2); //! temp        
+    //renderO(-3,1,-2); //! temp   
+    //renderX(-1,1,-3); //! temp    
+    //renderO(-2,1,-3); //! temp        
+    //renderX(-3,1,-3); //! temp       
+    renderGrid();
+    renderPlane();
+    
     for (var i = 0; i < gameState.length; i++){
         if (gameState[i][0] == "x"){
-            renderX(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
+            renderX(gameState[i][1], timeToZ(gameState[i][3]), gameState[i][2]);
             if (gameState[i][3] > 0) {
                 gameState[i][3] = gameState[i][3] - TIME_VAL;
             }
         }
         if (gameState[i][0] == "o"){
-            renderO(gameState[i][1], gameState[i][2], timeToZ(gameState[i][3]));
+            renderO(gameState[i][1], timeToZ(gameState[i][3]), gameState[i][2]);
             if (gameState[i][3] > 0) {
                 gameState[i][3] = gameState[i][3] - TIME_VAL;
             }
         }
         checkGameState();
-        if (gameWon){allSettled();}
+        if ((gameWon || boardFull()) && allSettled()){ 
+            sleep(500).then(() => {
+                resetGame(); 
+            })
+        }
     }
-    */
+
  
     requestAnimFrame( render );
 }
