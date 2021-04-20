@@ -48,7 +48,7 @@ var specularProduct = mult(lightSpecular, materialSpecular);
 
 var near = 0.3;    // Near clipping plane
 var far = 30.0;   // Far clipping plane
-var fovy = 120.0;  // Field-of-view in Y direction angle (in degrees)
+var fovy = 60.0;  // Field-of-view in Y direction angle (in degrees)
 var aspect = 1.0;  // Viewport aspect ratio
 
 const TIME_VAL = .05;
@@ -133,7 +133,7 @@ function getOrderedNormalsFromObj(obj_object){
 }
 
 function readO(){
-	loadOBJFromPath("ooh.obj", loadedO, readGrid);
+	loadOBJFromPath("newo.obj", loadedO, readGrid);
 }
 
 function readGrid(){
@@ -190,13 +190,13 @@ window.onload = function init()
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
 	aspect =  canvas.width/canvas.height;
-    gl.clearColor( 0.0, 1.0, 0.5, 1.0);
+    gl.clearColor( 1.0, 1.0, 1.0, 1.0);
 	
-	loadOBJFromPath("eks.obj", loadedX, readO);
+	loadOBJFromPath("newx.obj", loadedX, readO);
     
     canvas.addEventListener("mousedown", function(event){
         var clickCoord = [(2*event.clientX/canvas.width-1), (2*(canvas.height-event.clientY)/canvas.height-1)];
-        console.log(clickCoord);
+        //console.log(clickCoord);
         registerClick(clickCoord[0], clickCoord[1]);
     });    
 }
@@ -518,17 +518,23 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	var eye = vec3(1.0, -1.0, 1.0);   
+	var eye = vec3(.7, -.7, .7);   
 	var at = vec3(0.0, 0.0, 0.0);
-	var up = vec3(0.0, 0.0, 1.0);
+	var up = vec3(0.0, -1.0, 0.0);
 
 	modelViewMatrix = lookAt( eye, at, up );
 
     projectionMatrix = perspective(fovy, aspect, near, far);
  
-    renderX(0,0,0); //! temp
-    renderO(1,1,0); //! temp
-
+    renderX(-1,1,-1); //! temp
+    renderO(-2,1,-1); //! temp
+    renderX(-3,1,-1); //! temp
+    renderO(-1,1,-2); //! temp    
+    renderX(-2,1,-2); //! temp        
+    renderO(-3,1,-2); //! temp   
+    renderX(-1,1,-3); //! temp    
+    renderO(-2,1,-3); //! temp        
+    renderX(-3,1,-3); //! temp       
     //! @todo uncomment
     /*
     for (var i = 0; i < gameState.length; i++){
