@@ -9,11 +9,58 @@ attribute vec4 vPosition;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform float shininess;
+uniform vec4 lightPosition1;
+uniform vec4 lightPosition2;
+uniform vec3 eyePosition;
 
+varying vec4 fColor;
 varying vec2 fTexCoord;
 
 void main()
 {   
+    // Light 1
+    vec3 L;
+    if(lightPosition1.w == 0.0) L = normalize(lightPosition1.xyz);
+    else L = normalize(( lightPosition1 - vPosition ).xyz);
+
+    vec3 E = normalize(eyePosition);
+    vec3 H = normalize(L + E);
+
+    vec3 N = normalize(-vNormal.xyz);
+
+    vec4 ambient = ambientProduct;
+
+    float Kd = max( dot(L, N), 0.0 );
+    vec4  diffuse = Kd*diffuseProduct;
+
+    float Ks = pow( max(dot(N, H), 0.0), shininess );
+    vec4  specular = Ks * specularProduct;
+    
+    if( dot(L, N) < 0.0 ) {
+	specular = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+
+    // Light 2
+    vec3 L2;
+    if(lightPosition2.w == 0.0) L2 = normalize(lightPosition2.xyz);
+    else L2 = normalize(( lightPosition2 - vPosition ).xyz);
+
+    vec3 H2 = normalize(L2 + E);
+    float Kd2 = max( dot(L2, N), 0.0 );
+    vec4  diffuse2 = Kd2*diffuseProduct;
+
+    float Ks2 = pow( max(dot(N, H2), 0.0), shininess );
+    vec4  specular2 = Ks2 * specularProduct;
+    
+    if( dot(L2, N) < 0.0 ) {
+	    specular2 = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+
+    fColor = ambient + diffuse + specular+ diffuse2 + specular2;
+    fColor.a = 1.0;
+
     gl_Position = projectionMatrix*modelViewMatrix*vPosition;
 	
     // Texture coordinates
@@ -26,12 +73,13 @@ precision mediump float;
 
 uniform sampler2D texture;
 
+varying vec4 fColor;
 varying vec2 fTexCoord;
 
 void main()
 {
     // TODO light source, bump map, diffuse coefficient, ..
-    gl_FragColor = texture2D(texture, fTexCoord);
+    gl_FragColor = fColor * texture2D(texture, fTexCoord);
 }
 </script>
 
@@ -43,15 +91,59 @@ attribute vec3 vNormal;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform float shininess;
+uniform vec4 lightPosition1;
 uniform vec4 lightPosition2;
+uniform vec3 eyePosition;
 
-uniform vec4 lightPosition;
+varying vec4 fColor;
 
 varying vec2 fTexCoord;
-varying vec3 N, L, L2, E;
 
 void main()
 {
+    // Light 1
+    vec3 L;
+    if(lightPosition1.w == 0.0) L = normalize(lightPosition1.xyz);
+    else L = normalize(( lightPosition1 - vPosition ).xyz);
+
+    vec3 E = normalize(eyePosition);
+    vec3 H = normalize(L + E);
+
+    vec3 N = normalize(-vNormal.xyz);
+
+    vec4 ambient = ambientProduct;
+
+    float Kd = max( dot(L, N), 0.0 );
+    vec4  diffuse = Kd*diffuseProduct;
+
+    float Ks = pow( max(dot(N, H), 0.0), shininess );
+    vec4  specular = Ks * specularProduct;
+    
+    if( dot(L, N) < 0.0 ) {
+	specular = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+
+    // Light 2
+    vec3 L2;
+    if(lightPosition2.w == 0.0) L2 = normalize(lightPosition2.xyz);
+    else L2 = normalize(( lightPosition2 - vPosition ).xyz);
+    
+    vec3 H2 = normalize(L2 + E);
+    float Kd2 = max( dot(L2, N), 0.0 );
+    vec4  diffuse2 = Kd2*diffuseProduct;
+
+    float Ks2 = pow( max(dot(N, H2), 0.0), shininess );
+    vec4  specular2 = Ks2 * specularProduct;
+    
+    if( dot(L2, N) < 0.0 ) {
+	    specular2 = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+
+    fColor = ambient + diffuse + specular+ diffuse2 + specular2;
+    fColor.a = 1.0;
+
     gl_Position = projectionMatrix*modelViewMatrix*vPosition;
 	
     // Texture coordinates
@@ -62,18 +154,14 @@ void main()
 
 precision mediump float;
 
-uniform vec4 ambientProduct;
-uniform vec4 diffuseProduct;
-uniform vec4 specularProduct;
-uniform float shininess;
 uniform sampler2D texture;
 
-varying vec3 N, L, L2, E;
+varying vec4 fColor;
 varying vec2 fTexCoord;
 
 void main()
 {
-    gl_FragColor = texture2D(texture, fTexCoord);
+    gl_FragColor = fColor * texture2D(texture, fTexCoord);
 }
 </script>
 
@@ -85,12 +173,8 @@ attribute vec3 vNormal;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform vec4 lightPosition2;
-
-uniform vec4 lightPosition;
 
 varying vec2 fTexCoord;
-varying vec3 N, L, L2, E;
 
 void main()
 {
@@ -104,13 +188,8 @@ void main()
 
 precision mediump float;
 
-uniform vec4 ambientProduct;
-uniform vec4 diffuseProduct;
-uniform vec4 specularProduct;
-uniform float shininess;
 uniform sampler2D texture;
 
-varying vec3 N, L, L2, E;
 varying vec2 fTexCoord;
 
 void main()

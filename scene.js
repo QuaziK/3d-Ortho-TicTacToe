@@ -33,11 +33,11 @@ var plane_texture_coords;
 
 var lightPosition1 = vec4(1.0, 1.0, 1.0, 0.0);
 var lightPosition2 = vec4(-1.0, -1.0, 1.0, 0.0);
-var lightAmbient = vec4(0,0,0, 1.0 );
+var lightAmbient = vec4(1,1,1, 1.0 );
 var lightDiffuse = vec4( 1,1,1, 1.0 );
 var lightSpecular = vec4( 1,1,1, 1.0 );
 
-var materialAmbient = vec4( 0,0,0, 1.0 );
+var materialAmbient = vec4( .2,.2,.2, 1.0 );
 var materialDiffuse = vec4( .8,.8,.8, 1.0);
 var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 var materialShininess = 20.0;                                             
@@ -45,6 +45,8 @@ var materialShininess = 20.0;
 var ambientProduct = mult(lightAmbient, materialAmbient);
 var diffuseProduct = mult(lightDiffuse, materialDiffuse);
 var specularProduct = mult(lightSpecular, materialSpecular);
+
+var eyePosition = vec3(1, -1, 1);
 
 var near = 0.3;    // Near clipping plane
 var far = 30.0;   // Far clipping plane
@@ -258,6 +260,15 @@ function setupXBuffers(){
 	// Model view projection uniforms
 	modelViewMatrixLocX = gl.getUniformLocation( x_shader, "modelViewMatrix" );
     projectionMatrixLocX = gl.getUniformLocation( x_shader, "projectionMatrix" );
+
+    // Setup lighting
+    gl.uniform4fv( gl.getUniformLocation(x_shader, "ambientProduct"),flatten(ambientProduct) );
+	gl.uniform4fv( gl.getUniformLocation(x_shader, "diffuseProduct"),flatten(diffuseProduct) );
+	gl.uniform4fv( gl.getUniformLocation(x_shader, "specularProduct"),flatten(specularProduct) );	
+	gl.uniform4fv( gl.getUniformLocation(x_shader, "lightPosition1"),flatten(lightPosition1) );
+    gl.uniform4fv( gl.getUniformLocation(x_shader, "lightPosition2"),flatten(lightPosition2) );
+	gl.uniform1f( gl.getUniformLocation(x_shader, "shininess"),materialShininess );
+    gl.uniform3fv(gl.getUniformLocation(x_shader, "eyePosition"), flatten(eyePosition));
 }
 
 function setupOBuffers(){
@@ -297,6 +308,15 @@ function setupOBuffers(){
 	// Model view projection uniforms
 	modelViewMatrixLocO = gl.getUniformLocation( o_shader, "modelViewMatrix" );
     projectionMatrixLocO = gl.getUniformLocation( o_shader, "projectionMatrix" );
+
+    // Setup lighting
+    gl.uniform4fv( gl.getUniformLocation(o_shader, "ambientProduct"),flatten(ambientProduct) );
+	gl.uniform4fv( gl.getUniformLocation(o_shader, "diffuseProduct"),flatten(diffuseProduct) );
+	gl.uniform4fv( gl.getUniformLocation(o_shader, "specularProduct"),flatten(specularProduct) );	
+	gl.uniform4fv( gl.getUniformLocation(o_shader, "lightPosition"),flatten(lightPosition1) );
+    gl.uniform4fv( gl.getUniformLocation(o_shader, "lightPosition2"),flatten(lightPosition2) );
+	gl.uniform1f( gl.getUniformLocation(o_shader, "shininess"),materialShininess );
+    gl.uniform3fv(gl.getUniformLocation(o_shader, "eyePosition"), flatten(eyePosition));
 }
 
 function setupGridBuffers(){
@@ -336,6 +356,15 @@ function setupGridBuffers(){
 	// Model view projection uniforms
 	modelViewMatrixLocGrid = gl.getUniformLocation( grid_shader, "modelViewMatrix" );
     projectionMatrixLocGrid = gl.getUniformLocation( grid_shader, "projectionMatrix" );
+
+    // Setup lighting
+    gl.uniform4fv( gl.getUniformLocation(grid_shader, "ambientProduct"),flatten(ambientProduct) );
+	gl.uniform4fv( gl.getUniformLocation(grid_shader, "diffuseProduct"),flatten(diffuseProduct) );
+	gl.uniform4fv( gl.getUniformLocation(grid_shader, "specularProduct"),flatten(specularProduct) );	
+	gl.uniform4fv( gl.getUniformLocation(grid_shader, "lightPosition1"),flatten(lightPosition1) );
+    gl.uniform4fv( gl.getUniformLocation(grid_shader, "lightPosition2"),flatten(lightPosition2) );
+	gl.uniform1f( gl.getUniformLocation(grid_shader, "shininess"),materialShininess );
+    gl.uniform3fv(gl.getUniformLocation(grid_shader, "eyePosition"), flatten(eyePosition));
 }
 
 function setupPlaneBuffers(){
