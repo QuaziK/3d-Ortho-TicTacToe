@@ -568,10 +568,11 @@ function registerClick(xcoord, ycoord){
             if (useXPiece) { piece="x"; } else { piece="o" }            
             if (gameState[matrixToLinear(gridxy[0],gridxy[1])][0] == "e" ) {
                 gameState[matrixToLinear(gridxy[0],gridxy[1])] = [piece, gridxy[2],gridxy[3], 2.0];
+                useXPiece = !useXPiece;
             }        
         }
         console.log(gameState);
-        useXPiece = !useXPiece;
+        
     }
 }
 
