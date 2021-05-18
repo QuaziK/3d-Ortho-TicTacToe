@@ -232,6 +232,7 @@ var projectionMatrixLocX, modelViewMatrixLocX;
 var projectionMatrixLocO, modelViewMatrixLocO;
 var projectionMatrixLocGrid, modelViewMatrixLocGrid;
 var projectionMatrixLocPlane, modelViewMatrixLocPlane;
+var normalMatrixLocPlane;
 
 var textureLoc, textureNormalLoc;
 
@@ -424,7 +425,7 @@ function setupPlaneBuffers(){
 	tBufferPlane = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(plane_texture_coords), gl.STATIC_DRAW );
-    //console.log("text coord " + plane_texture_coords);
+    console.log("text coord " + plane_texture_coords);
 
     vTexCoordPlane = gl.getAttribLocation( plane_shader, "vTexCoord" );
     //console.log(vTexCoordO);
@@ -436,6 +437,9 @@ function setupPlaneBuffers(){
 	// Model view projection uniforms
 	modelViewMatrixLocPlane = gl.getUniformLocation( plane_shader, "modelViewMatrix" );
     projectionMatrixLocPlane = gl.getUniformLocation( plane_shader, "projectionMatrix" );
+
+    // Normal matrix
+    normalMatrixLocPlane = gl.getUniformLocation( plane_shader, "normalMatrix" );
 
     // Setup lighting
     gl.uniform4fv( gl.getUniformLocation(plane_shader, "lightPosition"), flatten(lightPosition1) );
@@ -606,6 +610,10 @@ function renderPlane(){
     modelViewMatrixPlane = mult(modelViewMatrixPlane, scalem(1.4,1.4,1.4));
 	gl.uniformMatrix4fv( modelViewMatrixLocPlane, false, flatten(modelViewMatrixPlane) );
     gl.uniformMatrix4fv( projectionMatrixLocPlane, false, flatten(projectionMatrix) );
+
+    // Normal Matrix
+    var normalMatrix = mat4ToInverseMat3(modelViewMatrix);
+    gl.uniformMatrix4fv( normalMatrixLocPlane, false, flatten(normalMatrix) );
 
 	// console.log(numVerticesInAllYFaces);
     gl.drawElements( gl.TRIANGLES, numVerticesInAllPlaneFaces, gl.UNSIGNED_SHORT, 0 );     
