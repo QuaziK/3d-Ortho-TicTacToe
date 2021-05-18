@@ -211,6 +211,36 @@ window.onload = function init()
     });    
 }
 
+function mat4ToInverseMat3(mat) {
+
+    var dest = mat3();
+	
+	var a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
+	var a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
+	var a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
+	
+	var b01 = a22*a11-a12*a21;
+	var b11 = -a22*a10+a12*a20;
+	var b21 = a21*a10-a11*a20;
+		
+	var d = a00*b01 + a01*b11 + a02*b21;
+	if (!d) { return null; }
+	var id = 1/d;
+	
+	
+	dest[0][0] = b01*id;
+	dest[0][1] = (-a22*a01 + a02*a21)*id;
+	dest[0][2] = (a12*a01 - a02*a11)*id;
+	dest[1][0] = b11*id;
+	dest[1][1] = (a22*a00 - a02*a20)*id;
+	dest[1][2] = (-a12*a00 + a02*a10)*id;
+	dest[2][0] = b21*id;
+	dest[2[1]] = (-a21*a00 + a01*a20)*id;
+	dest[2][2] = (a11*a00 - a01*a10)*id;
+	
+	return dest;
+};
+
 var x_shader, o_shader, grid_shader, plane_shader;
 var vBufferX, vBufferO, vBufferGrid, vBufferPlane; 
 var vPositionX, vPositionO, vPositionGrid, vPositionPlane;
@@ -683,7 +713,7 @@ function renderPlane(){
     gl.uniformMatrix4fv( projectionMatrixLocPlane, false, flatten(projectionMatrix) );
 
     // Normal Matrix
-    var normalMatrix = mat4ToInverseMat3(modelViewMatrix);
+    var normalMatrix = mat4ToInverseMat3(modelViewMatrixPlane);
     gl.uniformMatrix3fv( normalMatrixLocPlane, false, flatten(normalMatrix) );
 
 	// console.log(numVerticesInAllYFaces);
