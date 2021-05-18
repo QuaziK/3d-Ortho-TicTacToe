@@ -468,7 +468,10 @@ function renderX(x, y, z){
     gl.enableVertexAttribArray( vTexCoordX );
 
     // Bind texture
-	gl.bindTexture( gl.TEXTURE_2D, textureX );
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture( gl.TEXTURE_2D, textureX );
+    gl.activeTexture( gl.TEXTURE1 );
+    gl.bindTexture( gl.TEXTURE_2D, textureX );
 	
     // Model View Projection    
     var modelViewMatrixX = mult(modelViewMatrix, translate(x, y, z));
@@ -505,7 +508,10 @@ function renderO(x, y, z){
     gl.enableVertexAttribArray( vTexCoordO );
 
     // Bind texture
-	gl.bindTexture( gl.TEXTURE_2D, textureO );
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture( gl.TEXTURE_2D, textureO );
+    gl.activeTexture( gl.TEXTURE1 );
+    gl.bindTexture( gl.TEXTURE_2D, textureO );
 	
     // Model View Projection
     var modelViewMatrixO = mult(modelViewMatrix, translate(x, y, z));
@@ -540,7 +546,11 @@ function renderGrid(){
     gl.enableVertexAttribArray( vTexCoordGrid );
 
     // Bind texture
-	gl.bindTexture( gl.TEXTURE_2D, textureGrid );
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture( gl.TEXTURE_2D, textureGrid );
+    gl.activeTexture( gl.TEXTURE1 );
+    gl.bindTexture( gl.TEXTURE_2D, textureGrid );
+
 	var modelViewMatrixGrid = mult(modelViewMatrix, translate(-2,1,-2));
     modelViewMatrixGrid = mult(modelViewMatrixGrid, scalem(1.4,1,1.4));
 	gl.uniformMatrix4fv( modelViewMatrixLocGrid, false, flatten(modelViewMatrixGrid) );
@@ -586,10 +596,10 @@ function renderPlane(){
     gl.uniform1i(textureLoc, 0);
     gl.uniform1i(textureNormalLoc, 1);
     
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, normalPlane);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, normalPlane);
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture( gl.TEXTURE_2D, texturePlane );
+    gl.activeTexture( gl.TEXTURE1 );
+    gl.bindTexture( gl.TEXTURE_2D, normalPlane );
 
     // MVP
 	var modelViewMatrixPlane = mult(modelViewMatrix, translate(-2,1.2,-2));
