@@ -236,7 +236,7 @@ void main()
     vec3 color = texture2D(texture, fTexCoord).rgb;
 
     // Calculate ambient
-    vec3 ambient = 0.8 * color;
+    vec3 ambient = 0.5 * color;
 
     // Calculate diffuse
     vec3 lightDir = normalize(tangentLightPos - tangentFragmentPos);

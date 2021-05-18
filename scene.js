@@ -411,8 +411,6 @@ function setupTangent(){
     subDlt = dmult1 - dmult2;
     tangent1[0] = f * subDlt;
 
-    console.log("tan " + position3 + " " + position1);
-
     dmult1 = stDelta2[1] * edge1[1];
     dmult2 = stDelta1[1] * edge2[1];
     subDlt = dmult1 - dmult2;
@@ -459,8 +457,6 @@ function setupTangent(){
         tangent2,
         tangent2
     ];
-
-    console.log( "tangents" + tangents);
 
     return tangents;
 }
@@ -688,7 +684,7 @@ function renderPlane(){
 
     // Normal Matrix
     var normalMatrix = mat4ToInverseMat3(modelViewMatrix);
-    gl.uniformMatrix4fv( normalMatrixLocPlane, false, flatten(normalMatrix) );
+    gl.uniformMatrix3fv( normalMatrixLocPlane, false, flatten(normalMatrix) );
 
 	// console.log(numVerticesInAllYFaces);
     gl.drawElements( gl.TRIANGLES, numVerticesInAllPlaneFaces, gl.UNSIGNED_SHORT, 0 );     
