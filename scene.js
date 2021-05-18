@@ -154,6 +154,7 @@ var textureX;
 var textureO;
 var textureGrid;
 var texturePlane;
+var normalPlane;
 
 function configureTexture( image ) {
     var texture = gl.createTexture();
@@ -179,11 +180,14 @@ function setupAfterDataLoad(){
 	textureX = configureTexture( image1 );
 	var image2 = document.getElementById("worldImage");
     textureO = configureTexture( image2 );
-	var image3 = document.getElementById("ballImage");
+	var image3 = document.getElementById("donutImage");
     textureGrid = configureTexture( image3 );
-	var image4 = document.getElementById("donutImage");
-    texturePlane = configureTexture( image4 );    
-    
+	var image4 = document.getElementById("brickImage");
+    texturePlane = configureTexture( image4 );  
+    var image5 = document.getElementById("brickNormalImage");
+    normalPlane = configureTexture(image5);  
+    console.log("normal plane: " + normalPlane);
+
     render();	
 }
 
@@ -218,10 +222,18 @@ var tBufferX, tBufferO, tBufferGrid, tBufferPlane;
 var vTexCoordX, vTexCoordO, vTexCoordGrid, vTexCoordPlane;
 var vNormalX, vNormalO, vNormalGrid, vNormalPlane;
 
+var tangBufferPlane;
+var bitangBufferPlane;
+
+var vTangentPlane;
+var vBitangentPlane;
+
 var projectionMatrixLocX, modelViewMatrixLocX;
 var projectionMatrixLocO, modelViewMatrixLocO;
 var projectionMatrixLocGrid, modelViewMatrixLocGrid;
 var projectionMatrixLocPlane, modelViewMatrixLocPlane;
+
+var textureLoc, textureNormalLoc;
 
 function setupXBuffers(){
     //  Load shaders and initialize attribute buffers
@@ -389,21 +401,45 @@ function setupPlaneBuffers(){
 	nBufferPlane = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferPlane );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_normals), gl.STATIC_DRAW );
+    //console.log("normals " + plane_normals);
 
 	vNormalPlane = gl.getAttribLocation( plane_shader, "vNormal" );
     //console.log(vNormalO);
+
+    // tangent array attribute buffer
+    tangBufferPlane = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tangBufferPlane );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
+
+    vTangentPlane = gl.getAttribLocation( plane_shader, "vTangent" );
+
+    // bitangent array attribute buffer
+    bitangBufferPlane = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, bitangBufferPlane );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
+
+    vBitangentPlane = gl.getAttribLocation( plane_shader, "vBitangent" );
 
 	// texture array attribute buffer
 	tBufferPlane = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(plane_texture_coords), gl.STATIC_DRAW );
-    
+    //console.log("text coord " + plane_texture_coords);
+
     vTexCoordPlane = gl.getAttribLocation( plane_shader, "vTexCoord" );
     //console.log(vTexCoordO);
+
+    // Textures
+    textureLoc = gl.getUniformLocation( plane_shader, texturePlane );
+    textureNormalLoc = gl.getUniformLocation( plane_shader, normalPlane );
 
 	// Model view projection uniforms
 	modelViewMatrixLocPlane = gl.getUniformLocation( plane_shader, "modelViewMatrix" );
     projectionMatrixLocPlane = gl.getUniformLocation( plane_shader, "projectionMatrix" );
+
+    // Setup lighting
+    gl.uniform4fv( gl.getUniformLocation(plane_shader, "lightPosition"), flatten(lightPosition1) );
+    gl.uniform3fv( gl.getUniformLocation(plane_shader, "eyePosition"), flatten(eyePosition));
 }
 
 function renderX(x, y, z){
@@ -504,7 +540,7 @@ function renderGrid(){
     gl.enableVertexAttribArray( vTexCoordGrid );
 
     // Bind texture
-	gl.bindTexture( gl.TEXTURE_2D, texturePlane );
+	gl.bindTexture( gl.TEXTURE_2D, textureGrid );
 	var modelViewMatrixGrid = mult(modelViewMatrix, translate(-2,1,-2));
     modelViewMatrixGrid = mult(modelViewMatrixGrid, scalem(1.4,1,1.4));
 	gl.uniformMatrix4fv( modelViewMatrixLocGrid, false, flatten(modelViewMatrixGrid) );
@@ -531,13 +567,31 @@ function renderPlane(){
     gl.vertexAttribPointer( vNormalPlane, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vNormalPlane );
 
+	// Tangent
+	gl.bindBuffer( gl.ARRAY_BUFFER, tangBufferPlane );
+    gl.vertexAttribPointer( vTangentPlane, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTangentPlane );
+
+    // Bitangent
+	gl.bindBuffer( gl.ARRAY_BUFFER, bitangBufferPlane );
+    gl.vertexAttribPointer( vBitangentPlane, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vBitangentPlane );
+
 	// Texture
 	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
 	gl.vertexAttribPointer( vTexCoordPlane, 2, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vTexCoordPlane );
 
-    // Bind texture
-	gl.bindTexture( gl.TEXTURE_2D, textureGrid );
+    // Bind textures
+    gl.uniform1i(textureLoc, 0);
+    gl.uniform1i(textureNormalLoc, 1);
+    
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, normalPlane);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, normalPlane);
+
+    // MVP
 	var modelViewMatrixPlane = mult(modelViewMatrix, translate(-2,1.2,-2));
     modelViewMatrixPlane = mult(modelViewMatrixPlane, scalem(1.4,1.4,1.4));
 	gl.uniformMatrix4fv( modelViewMatrixLocPlane, false, flatten(modelViewMatrixPlane) );

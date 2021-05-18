@@ -170,18 +170,46 @@ void main()
 attribute vec4 vPosition;
 attribute vec2 vTexCoord;
 attribute vec3 vNormal;
+attribute vec3 vTangent;
+attribute vec3 vBitangent;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
+
+uniform vec3 eyePosition;
+uniform vec4 lightPosition;
 
 varying vec2 fTexCoord;
+varying vec3 fragmentPos;
+varying vec3 tangentEyePos;
+varying vec3 tangentLightPos;
+varying vec3 tangentFragmentPos;
 
 void main()
 {
     gl_Position = projectionMatrix*modelViewMatrix*vPosition;
-	
-    // Texture coordinates
+
     fTexCoord = vTexCoord;
+
+    fragmentPos = vec3(modelViewMatrix * vec4(vPosition.xyz, 1.0));   
+    
+    vec3 T = normalize(normalMatrix * vTangent);
+    vec3 N = normalize(normalMatrix * vNormal);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T);
+    
+    // Transpose Tangent Bitangent Normal matrix
+    mat3 TBN = mat3(T, B, N);
+    mat3 TBN_transposed = mat3(
+    vec3(TBN[0].x, TBN[1].x, TBN[2].x),
+    vec3(TBN[0].y, TBN[1].y, TBN[2].y),
+    vec3(TBN[0].z, TBN[1].z, TBN[2].z));
+
+    tangentLightPos = TBN_transposed * lightPosition.xyz;
+    tangentEyePos  = TBN_transposed * eyePosition;
+    tangentFragmentPos  = TBN_transposed * fragmentPos;
+        
 }
 </script>
 <script id="plane-fragment-shader" type="x-shader/x-fragment">
@@ -189,12 +217,40 @@ void main()
 precision mediump float;
 
 uniform sampler2D texture;
+uniform sampler2D textureNormals;
 
 varying vec2 fTexCoord;
+varying vec3 fragmentPos;
+varying vec3 tangentEyePos;
+varying vec3 tangentLightPos;
+varying vec3 tangentFragmentPos;
 
 void main()
 {
-    gl_FragColor = texture2D(texture, fTexCoord);
+    // Get normals from texture in range [0,1]
+    vec4 N = texture2D(textureNormals, fTexCoord);
+    // Convert range to [-1,1]
+    vec3 NN = normalize(N.rgb * 2.0 - 1.0); 
+
+    // get diffuse color
+    vec3 color = texture2D(texture, fTexCoord).rgb;
+
+    // ambient
+    vec3 ambient = 0.1 * color;
+
+    // diffuse
+    vec3 lightDir = normalize(tangentLightPos - tangentFragmentPos);
+    float diff = max(dot(lightDir, NN), 0.0);
+    vec3 diffuse = diff * color;
+
+    // specular
+    vec3 viewDir = normalize(tangentEyePos - tangentFragmentPos);
+    vec3 reflectDir = reflect(-lightDir, NN);
+    vec3 halfwayDir = normalize(lightDir + viewDir);  
+    float spec = pow(max(dot(NN, halfwayDir), 0.0), 32.0);
+
+    vec3 specular = vec3(0.2) * spec;
+    gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
 }
 </script>
 
@@ -214,6 +270,9 @@ Oops ... your browser doesn't support the HTML5 canvas element
 <img id = "worldImage" src = "world.png" hidden></img>
 <img id = "ballImage" src = "ball.png" hidden></img>
 <img id = "donutImage" src = "donut.png" hidden></img>
+<img id = "brickImage" src = "brickwall.jpg" hidden></img>
+<img id = "brickNormalImage" src = "brickwall_normal.jpg" hidden></img>
+
 <br/>
 
 </body>
