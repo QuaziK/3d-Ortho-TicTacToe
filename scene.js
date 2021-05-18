@@ -223,10 +223,8 @@ var vTexCoordX, vTexCoordO, vTexCoordGrid, vTexCoordPlane;
 var vNormalX, vNormalO, vNormalGrid, vNormalPlane;
 
 var tangBufferPlane;
-var bitangBufferPlane;
 
 var vTangentPlane;
-var vBitangentPlane;
 
 var projectionMatrixLocX, modelViewMatrixLocX;
 var projectionMatrixLocO, modelViewMatrixLocO;
@@ -380,6 +378,93 @@ function setupGridBuffers(){
     gl.uniform3fv(gl.getUniformLocation(grid_shader, "eyePosition"), flatten(eyePosition));
 }
 
+function setupTangent(){
+    var position1 = vec3(plane_vertices[0], plane_vertices[1], plane_vertices[2]);
+    var position2 = vec3(plane_vertices[3], plane_vertices[4], plane_vertices[5]);
+    var position3 = vec3(plane_vertices[6], plane_vertices[7], plane_vertices[8]);
+    var position4 = vec3(plane_vertices[9], plane_vertices[10], plane_vertices[11]);
+
+    //console.log("position1 " + position1);
+
+    var st1 = vec2(plane_texture_coords[0], plane_texture_coords[1]);
+    var st2 = vec2(plane_texture_coords[2], plane_texture_coords[3]);
+    var st3 = vec2(plane_texture_coords[4], plane_texture_coords[5]);
+    var st4 = vec2(plane_texture_coords[6], plane_texture_coords[7]);
+
+    //console.log("texture coordinates " + st1);
+
+    // Tangent for first triangle of plane
+    var edge1 = subtract(position2, position1);
+    var edge2 = subtract(position3, position1);
+    var stDelta1 = subtract(st2, st1);
+    var stDelta2 = subtract(st3, st1);
+
+    var dmult1 = stDelta1[0] * stDelta2[1];
+    var dmult2 = stDelta2[0] * stDelta1[1];
+    var subDlt = dmult1 - dmult2;
+    var f = 1.0 / subDlt;
+
+    var tangent1 = vec3(0.0, 0.0, 0.0);
+
+    dmult1 = stDelta2[1] * edge1[0];
+    dmult2 = stDelta1[1] * edge2[0];
+    subDlt = dmult1 - dmult2;
+    tangent1[0] = f * subDlt;
+
+    console.log("tan " + position3 + " " + position1);
+
+    dmult1 = stDelta2[1] * edge1[1];
+    dmult2 = stDelta1[1] * edge2[1];
+    subDlt = dmult1 - dmult2;
+    tangent1[1] = f * subDlt;
+
+    dmult1 = stDelta2[1] * edge1[2];
+    dmult2 = stDelta1[1] * edge2[2];
+    subDlt = dmult1 - dmult2;
+    tangent1[2] = f * subDlt;
+
+    // Tangent for second triangle of plane
+    edge1 = subtract(position3, position1);
+    edge2 = subtract(position4, position1);
+    stDelta1 = subtract(st3, st1);
+    stDelta2 = subtract(st4, st1);
+
+    dmult1 = stDelta1[0] * stDelta2[1];
+    dmult2 = stDelta2[0] * stDelta1[1];
+    subDlt = dmult1 - dmult2;
+    f = 1.0 / subDlt;
+
+    var tangent2 = vec3(0.0, 0.0, 0.0);
+
+    dmult1 = stDelta2[1] * edge1[0];
+    dmult2 = stDelta1[1] * edge2[0];
+    subDlt = dmult1 - dmult2;
+    tangent2[0] = f * subDlt;
+
+    dmult1 = stDelta2[1] * edge1[1];
+    dmult2 = stDelta1[1] * edge2[1];
+    subDlt = dmult1 - dmult2;
+    tangent2[1] = f * subDlt;
+
+    dmult1 = stDelta2[1] * edge1[2];
+    dmult2 = stDelta1[1] * edge2[2];
+    subDlt = dmult1 - dmult2;
+    tangent2[2] = f * subDlt;
+
+    var tangents = [
+        tangent1,
+        tangent1,
+        tangent1,
+        tangent2,
+        tangent2,
+        tangent2
+    ];
+
+    console.log( "tangents" + tangents);
+
+    return tangents;
+}
+
 function setupPlaneBuffers(){
     //  Load shaders and initialize attribute buffers
     plane_shader = initShaders( gl, "plane-vertex-shader", "plane-fragment-shader" );
@@ -396,39 +481,34 @@ function setupPlaneBuffers(){
     gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
 
     vPositionPlane = gl.getAttribLocation( plane_shader, "vPosition" );
-    //console.log(vPositionO);
+    console.log("pos " + plane_vertices);
 
 	// normal array attribute buffer
 	nBufferPlane = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, nBufferPlane );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_normals), gl.STATIC_DRAW );
-    //console.log("normals " + plane_normals);
+    console.log("normals " + plane_normals);
 
 	vNormalPlane = gl.getAttribLocation( plane_shader, "vNormal" );
-    //console.log(vNormalO);
+    //console.log(vNormalPlane);
 
     // tangent array attribute buffer
+    var tangents = setupTangent();
     tangBufferPlane = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tangBufferPlane );
-    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tangents), gl.STATIC_DRAW );
 
     vTangentPlane = gl.getAttribLocation( plane_shader, "vTangent" );
-
-    // bitangent array attribute buffer
-    bitangBufferPlane = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bitangBufferPlane );
-    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(plane_vertices), gl.STATIC_DRAW );
-
-    vBitangentPlane = gl.getAttribLocation( plane_shader, "vBitangent" );
+    console.log("tangents " + tangents);
 
 	// texture array attribute buffer
 	tBufferPlane = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(plane_texture_coords), gl.STATIC_DRAW );
-    console.log("text coord " + plane_texture_coords);
-
+    
     vTexCoordPlane = gl.getAttribLocation( plane_shader, "vTexCoord" );
-    //console.log(vTexCoordO);
+    //console.log(vTexCoordPlane);
+    console.log("text coord " + plane_texture_coords);
 
     // Textures
     textureLoc = gl.getUniformLocation( plane_shader, texturePlane );
@@ -585,11 +665,6 @@ function renderPlane(){
 	gl.bindBuffer( gl.ARRAY_BUFFER, tangBufferPlane );
     gl.vertexAttribPointer( vTangentPlane, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vTangentPlane );
-
-    // Bitangent
-	gl.bindBuffer( gl.ARRAY_BUFFER, bitangBufferPlane );
-    gl.vertexAttribPointer( vBitangentPlane, 3, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vBitangentPlane );
 
 	// Texture
 	gl.bindBuffer( gl.ARRAY_BUFFER, tBufferPlane );
