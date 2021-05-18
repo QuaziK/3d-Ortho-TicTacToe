@@ -522,7 +522,7 @@ function setupPlaneBuffers(){
     var tangents = setupTangent();
     tangBufferPlane = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tangBufferPlane );
-    gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tangents), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(tangents), gl.STATIC_DRAW );
 
     vTangentPlane = gl.getAttribLocation( plane_shader, "vTangent" );
     console.log("tangents " + tangents);
